@@ -628,110 +628,124 @@ def check_config(config, setting):
         sys.exit(1)
 
 
-# Setup command line argument parser
-parser = argparse.ArgumentParser(description="Teedy document annotator")
-parser.add_argument("-c", help="Config file to parse", default="annotator.cfg")
-parser.add_argument(
-    "-i", help="Directory to import files from", default="import")
-parser.add_argument("-l", help="Logfile location", default="annotator.log")
-parser.add_argument("-t", help="Directory to read tags from", default="tags")
+def main():
+    # Setup command line argument parser
+    parser = argparse.ArgumentParser(description="Teedy document annotator")
+    parser.add_argument(
+        "-c", help="Config file to parse", default="annotator.cfg")
+    parser.add_argument(
+        "-i", help="Directory to import files from", default="import")
+    parser.add_argument("-l", help="Logfile location", default="annotator.log")
+    parser.add_argument(
+        "-t", help="Directory to read tags from", default="tags")
 
-# Parse command line arguments
-args = parser.parse_args()
+    # Parse command line arguments
+    args = parser.parse_args()
 
-# Configure logging
-logging.basicConfig(
-    format='%(asctime)s %(levelname)s %(message)s',
-    datefmt='%d.%m.%Y %H:%M:%S',
-    level=logging.DEBUG,
-    handlers=[logging.FileHandler(args.l),
-              logging.StreamHandler()])
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+    # Configure logging
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)s %(message)s',
+        datefmt='%d.%m.%Y %H:%M:%S',
+        level=logging.DEBUG,
+        handlers=[logging.FileHandler(args.l),
+                  logging.StreamHandler()])
+    logging.getLogger("requests").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-while True:
-    # Read config file
-    config = configparser.ConfigParser()
-    config.read(args.c)
+    while True:
+        # Read config file
+        config = configparser.ConfigParser()
+        config.read(args.c)
 
-    # Make sure that we have all the necessary settings present
-    check_config(config, "server")
-    check_config(config, "username")
-    check_config(config, "password")
-    check_config(config, "acl_group")
+        # Make sure that we have all the necessary settings present
+        check_config(config, "server")
+        check_config(config, "username")
+        check_config(config, "password")
+        check_config(config, "acl_group")
 
-    # Extract required config value
-    server = config.get("DEFAULT", "server")
-    username = config.get("DEFAULT", "username")
-    password = config.get("DEFAULT", "password")
-    acl_group = config.get("DEFAULT", "acl_group")
+        # Extract required config value
+        server = config.get("DEFAULT", "server")
+        username = config.get("DEFAULT", "username")
+        password = config.get("DEFAULT", "password")
+        acl_group = config.get("DEFAULT", "acl_group")
 
-    logging.info("Config file: %s", args.c)
-    logging.info("Server: %s", server)
-    logging.info("Username: %s", username)
-    logging.info("ACL Group: %s", acl_group)
-    logging.info("Import Dir: %s", args.i)
+        logging.info("Config file: %s", args.c)
+        logging.info("Server: %s", server)
+        logging.info("Username: %s", username)
+        logging.info("ACL Group: %s", acl_group)
+        logging.info("Import Dir: %s", args.i)
 
-    logging.debug("Logging in")
-    cookie = login(server, username, password)
-    logging.debug("Login successful, token is %s", cookie)
+        logging.debug("Logging in")
+        cookie = login(server, username, password)
+        logging.debug("Login successful, token is %s", cookie)
 
-    logging.debug("Retrieving tag list from server")
-    tag_names = get_tags(server, cookie)
-    logging.info("%i tags found on the server", len(tag_names))
+        logging.debug("Retrieving tag list from server")
+        tag_names = get_tags(server, cookie)
+        logging.info("%i tags found on the server", len(tag_names))
 
-    logging.debug("Reading tag definitions from file")
-    tag_searches = read_tags(args.t)
-    logging.info("%i tag definitions found", len(tag_searches))
+        logging.debug("Reading tag definitions from file")
+        tag_searches = read_tags(args.t)
+        logging.info("%i tag definitions found", len(tag_searches))
 
-    # Check if we have definitions for all teedy tags
-    logging.debug("Matching server tags and filessystem tag definitions")
-    check_server_tags(tag_names, tag_searches, acl_group)
+        # Check if we have definitions for all teedy tags
+        logging.debug("Matching server tags and filessystem tag definitions")
+        check_server_tags(server, cookie, tag_names, tag_searches, acl_group)
 
-    # Check if we have teedy tags for all tag definitions
-    check_tag_searches(tag_searches, tag_names)
+        # Check if we have teedy tags for all tag definitions
+        check_tag_searches(server, cookie, tag_searches, tag_names, acl_group)
 
-    # Import files
-    logging.debug("Looking for files to import")
-    imported = 0
-    files = glob.glob(os.path.join(args.i, "*.pdf"))
-    for filename in files:
-        purename = os.path.basename(filename)
+        # Import files
+        logging.debug("Looking for files to import")
+        imported = 0
+        files = glob.glob(os.path.join(args.i, "*.pdf"))
+        for filename in files:
+            purename = os.path.basename(filename)
 
-        logging.info("Uploading file %s", purename)
+            logging.info("Uploading file %s", purename)
 
-        result = import_file(server, cookie, filename, acl_group)
-        if not result:
-            continue
+            result = import_file(server, cookie, filename, acl_group)
+            if not result:
+                continue
 
-        logging.info("Successfully uploaded %s as document %s", purename,
-                     result)
+            imported = imported + 1
 
-        # Add the correct tags to the document (if the text is already available)
-        update_document_tags(server, cookie, result, tag_names, tag_searches)
+            logging.info("Successfully uploaded %s as document %s", purename,
+                         result)
 
-        # Set the proper create_date (if the text is already available)
-        update_document_date(server, cookie, result)
+            # Add the correct tags to the document (if the text is already available)
+            update_document_tags(server, cookie, result, tag_names,
+                                 tag_searches)
 
-        # Delete input file
-        os.unlink(filename)
-        logging.debug("Successfully deleted file %s", filename)
+            # Set the proper create_date (if the text is already available)
+            update_document_date(server, cookie, result)
 
-    logging.debug("Retrieving document list")
-    documents = get_documents(server, cookie)
-    logging.info("%i documents found on the server", len(documents))
+            # Delete input file
+            os.unlink(filename)
+            logging.debug("Successfully deleted file %s", filename)
 
-    for document in documents:
-        logging.debug("Processing %s (%s)", document["title"], document["id"])
+        if imported > 0:
+            logging.info("Imported %i files", imported)
 
-        # Update tags for the document
-        update_document_tags(server, cookie, document["id"], tag_names,
-                             tag_searches)
+        logging.debug("Retrieving document list")
+        documents = get_documents(server, cookie)
+        logging.info("%i documents found on the server", len(documents))
 
-        # Ensure correct ACLs for the document
-        check_document_acls(server, cookie, document["id"], acl_group)
+        for document in documents:
+            logging.debug("Processing %s (%s)", document["title"],
+                          document["id"])
 
-        # Determine correct create_date for document
-        update_document_date(server, cookie, document["id"])
+            # Update tags for the document
+            update_document_tags(server, cookie, document["id"], tag_names,
+                                 tag_searches)
 
-    time.sleep(3600)
+            # Ensure correct ACLs for the document
+            check_document_acls(server, cookie, document["id"], acl_group)
+
+            # Determine correct create_date for document
+            update_document_date(server, cookie, document["id"])
+
+        time.sleep(3600)
+
+
+if __name__ == "__main__":
+    main()
