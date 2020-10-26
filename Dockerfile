@@ -6,4 +6,4 @@ RUN pip install -r /requirements.txt
 COPY annotator.py /
 WORKDIR /
 
-CMD ["python3", "/annotator.py", "-i", "/import", "-c", "/annotator.cfg", "-l", "/annotator.log"]
+CMD ["python3", "/annotator.py", "-i", "/import", "-c", "/annotator.cfg", "-l", "/annotator.log", "-t", "/tags"]

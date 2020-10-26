@@ -610,6 +610,7 @@ parser.add_argument("-c", help="Config file to parse", default="annotator.cfg")
 parser.add_argument(
     "-i", help="Directory to import files from", default="import")
 parser.add_argument("-l", help="Logfile location", default="annotator.log")
+parser.add_argument("-t", help="Directory to read tags from", default="tags")
 
 # Parse command line arguments
 args = parser.parse_args()
@@ -656,7 +657,7 @@ while True:
     logging.info("%i tags found on the server", len(tag_names))
 
     logging.debug("Reading tag definitions from file")
-    tag_searches = read_tags("tags")
+    tag_searches = read_tags(args.t)
     logging.info("%i tag definitions found", len(tag_searches))
 
     # Check if we have definitions for all teedy tags
