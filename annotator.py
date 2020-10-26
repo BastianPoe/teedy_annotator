@@ -520,7 +520,7 @@ def update_document_tags(server, cookie, document_id, tag_names, tag_searches):
     #text_lower = re.sub(r'[^\w\s]', '', text_lower) # Seems to reduce matching performance, hence disabled
 
     for tag in tag_names:
-        tag_name = tag["name"].lower()
+        tag_name = tag["name"]
 
         if not tag_name in tag_searches:
             continue
