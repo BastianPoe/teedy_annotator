@@ -425,47 +425,47 @@ def import_file(server, cookie, pathname, acl_group=None):
         logging.error("Failed to create document for file %s", purename)
         return None
 
-    logging.debug("Created document %s successfully", document_result["id"])
+    logging.debug("Created document %s successfully", document_result)
 
-    file_result = add_file(server, cookie, pathname, document_result["id"])
+    file_result = add_file(server, cookie, pathname, document_result)
     if file_result is None:
         logging.error("Failed to add file %s to document %s", purename,
-                      document_result["id"])
-        delete_document(server, cookie, document_result["id"])
+                      document_result)
+        delete_document(server, cookie, document_result)
         return None
 
     logging.debug("Added file %s successfully to document %s",
-                  file_result["id"], document_result["id"])
+                  file_result["id"], document_result)
 
     if acl_group is None:
-        return document_result["id"]
+        return document_result
 
-    acl_result = create_acl(server, cookie, document_result["id"], acl_group,
+    acl_result = create_acl(server, cookie, document_result, acl_group,
                             "GROUP", "READ")
     if acl_result is None:
         logging.error("Failed to create READ acl for group %s on document %s",
-                      acl_group, document_result["id"])
+                      acl_group, document_result)
         delete_file(server, cookie, file_result["id"])
-        delete_document(server, cookie, document_result["id"])
+        delete_document(server, cookie, document_result)
         return None
 
     logging.debug("Successfully created READ acl for group %s on document %s",
-                  acl_group, document_result["id"])
+                  acl_group, document_result)
 
-    acl_result = create_acl(server, cookie, document_result["id"], acl_group,
+    acl_result = create_acl(server, cookie, document_result, acl_group,
                             "GROUP", "WRITE")
     if acl_result is None:
         logging.error("Failed to create WRITE acl for group %s on document %s",
-                      acl_group, document_result["id"])
-        delete_acl(server, cookie, document_result["id"], "READ", acl_group)
+                      acl_group, document_result)
+        delete_acl(server, cookie, document_result, "READ", acl_group)
         delete_file(server, cookie, file_result["id"])
-        delete_document(server, cookie, document_result["id"])
+        delete_document(server, cookie, document_result)
         return None
 
     logging.debug("Successfully created WRITE acl for group %s on document %s",
-                  acl_group, document_result["id"])
+                  acl_group, document_result)
 
-    return document_result["id"]
+    return document_result
 
 
 def create_update_data(data):
