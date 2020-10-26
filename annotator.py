@@ -233,6 +233,22 @@ def get_tag(server, cookie, tag_id):
     return json.loads(resp.text)
 
 
+def create_tag(server, cookie, name, color="#3a87ad"):
+    cookies = {"auth_token": cookie}
+    parameters = {"name": name, "color": color}
+    url = server + "/api/tag"
+    resp = requests.put(url, cookies=cookies, data=parameters)
+
+    if resp.status_code != 200:
+        logging.error("create_tag failed, http status code is %i (%s)",
+                      resp.status_code, resp.text)
+        return None
+
+    resp.encoding = "utf-8"
+
+    return json.loads(resp.text)["id"]
+
+
 def create_acl(server, cookie, document_id, target, target_type, permission):
     cookies = {"auth_token": cookie}
     url = server + "/api/acl"
@@ -360,36 +376,44 @@ def check_server_tags(tag_names, tag_searches, acl_group):
         if not check_acl(data["acls"], acl_group, "GROUP", "READ"):
             logging.info("Adding READ ACL for group %s on tag %s", acl_group,
                          tag["name"])
-            acl_result = create_acl(server, cookie, data["id"], acl_group,
-                                    "GROUP", "READ")
+            create_acl(server, cookie, data["id"], acl_group, "GROUP", "READ")
 
         if not check_acl(data["acls"], acl_group, "GROUP", "WRITE"):
             logging.info("Adding WRITE ACL for group %s on tag %s", acl_group,
                          tag["name"])
-            acl_result = create_acl(server, cookie, data["id"], acl_group,
-                                    "GROUP", "WRITE")
+            create_acl(server, cookie, data["id"], acl_group, "GROUP", "WRITE")
 
         found = False
 
         for mytag in tag_searches:
-            if mytag.lower() == tag_name:
+            if mytag == tag_name:
                 found = True
 
         if not found:
             logging.error("Please create tag definition for %s", tag["name"])
 
 
-def check_tag_searches(tag_searches, tag_names):
+def check_tag_searches(server, cookie, tag_searches, tag_names, acl_group):
     for tag in tag_searches:
         found = False
 
         for mytag in tag_names:
-            mytag_name = mytag["name"].lower()
-            if mytag_name == tag.lower():
+            if mytag["name"] == tag:
                 found = True
+                break
 
-        if not found:
-            logging.error("Please create tag %s on the server", tag)
+        if found:
+            continue
+
+        logging.info("Creating tag %s", tag)
+        result_tag = create_tag(server, cookie, tag)
+        if result_tag is None:
+            logging.error("Failed to create tag %s", tag)
+
+        create_acl(server, cookie, result_tag, acl_group, "GROUP", "READ")
+        create_acl(server, cookie, result_tag, acl_group, "GROUP", "WRITE")
+
+        logging.info("Successfully created tag %s with ID %s", tag, result_tag)
 
 
 def import_file(server, cookie, pathname, acl_group=None):
