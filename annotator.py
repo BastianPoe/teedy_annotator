@@ -5,12 +5,13 @@ import logging
 import json
 import re
 import os
+import time
 import datetime
-import dateparser
-import requests
 import glob
 import argparse
 import configparser
+import requests
+import dateparser
 from fuzzywuzzy import fuzz
 
 
@@ -359,16 +360,16 @@ def get_date(text):
 
         if date is not None and next_year > date.year > 1900:
             break
-        else:
-            date = None
+
+        date = None
 
     return date
 
 
-def check_server_tags(tag_names, tag_searches, acl_group):
+def check_server_tags(server, cookie, tag_names, tag_searches, acl_group):
     for tag in tag_names:
         logging.debug("Checking server Tag %s", tag["name"])
-        tag_name = tag["name"].lower()
+        tag_name = tag["name"]
 
         logging.debug("Retrieving data for tag %s", tag["name"])
         data = get_tag(server, cookie, tag["id"])
@@ -426,7 +427,7 @@ def import_file(server, cookie, pathname, acl_group=None):
 
     logging.debug("Created document %s successfully", document_result["id"])
 
-    file_result = add_file(server, cookie, filename, document_result["id"])
+    file_result = add_file(server, cookie, pathname, document_result["id"])
     if file_result is None:
         logging.error("Failed to add file %s to document %s", purename,
                       document_result["id"])
@@ -610,14 +611,12 @@ def check_document_acls(server, cookie, document_id, acl_group):
     if not check_acl(data["acls"], acl_group, "GROUP", "READ"):
         logging.info("Adding READ ACL for document %s for GROUP %s", acl_group,
                      document_id)
-        acl_result = create_acl(server, cookie, document_id, acl_group,
-                                "GROUP", "READ")
+        create_acl(server, cookie, document_id, acl_group, "GROUP", "READ")
 
     if not check_acl(data["acls"], acl_group, "GROUP", "WRITE"):
         logging.info("Adding WRITE ACL for document %s for GROUP %s",
-                     acl_group, document["id"])
-        acl_result = create_acl(server, cookie, document_id, acl_group,
-                                "GROUP", "WRITE")
+                     acl_group, document_id)
+        create_acl(server, cookie, document_id, acl_group, "GROUP", "WRITE")
 
     return True
 
