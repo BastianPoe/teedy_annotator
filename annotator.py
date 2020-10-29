@@ -126,9 +126,8 @@ def add_file(server, cookie, filename, document_id):
     url = server + "/api/file"
 
     # Read content of file
-    f = open(filename, "rb")
-    content = f.read()
-    f.close()
+    with open(filename, "rb") as filehandle:
+        content = filehandle.read()
 
     # Strip off path
     purename = os.path.basename(filename)
@@ -305,8 +304,8 @@ def read_tags(directory):
     tags = {}
 
     for filename in files:
-        with open(filename) as f:
-            lines = f.readlines()
+        with open(filename) as filehandle:
+            lines = filehandle.readlines()
 
         lines = [item.strip() for item in lines]
 
@@ -332,7 +331,7 @@ def get_date(text):
     # - XX. MONTH ZZZZ with XX being 1 or 2 and ZZZZ being 2 or 4 digits
     # - MONTH ZZZZ, with ZZZZ being 4 digits
     # - MONTH XX, ZZZZ with XX being 1 or 2 and ZZZZ being 4 digits
-    DATE_REGEX = re.compile(
+    date_regex = re.compile(
         r'(\b|(?!=([_-])))([0-9]{1,2})[\.\/-]([0-9]{1,2})[\.\/-]([0-9]{4}|[0-9]{2})(\b|(?=([_-])))|'
         +  # NOQA: E501
         r'(\b|(?!=([_-])))([0-9]{4}|[0-9]{2})[\.\/-]([0-9]{1,2})[\.\/-]([0-9]{1,2})(\b|(?=([_-])))|'
@@ -343,8 +342,8 @@ def get_date(text):
         + r'(\b|(?!=([_-])))([^\W\d_]{3,9} [0-9]{4})(\b|(?=([_-])))')
 
     # Iterate through all regex matches in text and try to parse the date
-    for m in re.finditer(DATE_REGEX, text):
-        date_string = m.group(0)
+    for matches in re.finditer(date_regex, text):
+        date_string = matches.group(0)
 
         try:
             date = dateparser.parse(
