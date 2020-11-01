@@ -137,7 +137,8 @@ def add_file(server, cookie, filename, document_id):
 
     # Set parameters for requests
     parameters = {"id": document_id}
-    resp = requests.put(url, cookies=cookies, files=files, data=parameters, timeout=60)
+    resp = requests.put(
+        url, cookies=cookies, files=files, data=parameters, timeout=60)
 
     if resp.status_code != 200:
         logging.error("add_file failed, http status code is %i",
@@ -217,6 +218,16 @@ def get_tags(server, cookie):
     return json.loads(resp.text)["tags"]
 
 
+def get_tag_by_name(server, cookie, name):
+    tags = get_tags(server, cookie)
+
+    for tag in tags:
+        if tag["name"] == name:
+            return tag["id"]
+
+    return None
+
+
 def get_tag(server, cookie, tag_id):
     cookies = {"auth_token": cookie}
 
@@ -233,9 +244,13 @@ def get_tag(server, cookie, tag_id):
     return json.loads(resp.text)
 
 
-def create_tag(server, cookie, name, color="#3a87ad"):
+def create_tag(server, cookie, name, parent=None, color="#3a87ad"):
     cookies = {"auth_token": cookie}
     parameters = {"name": name, "color": color}
+
+    if parent is not None:
+        parameters["parent"] = parent
+
     url = server + "/api/tag"
     resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
 
@@ -304,14 +319,20 @@ def read_tags(directory):
     tags = {}
 
     for filename in files:
-        with open(filename) as filehandle:
-            lines = filehandle.readlines()
-
-        lines = [item.strip() for item in lines]
-
         tagname = os.path.basename(filename)
 
-        tags[tagname] = lines
+        if os.path.isdir(filename):
+            tags[tagname] = read_tags(filename)
+
+        if os.path.isfile(filename):
+            with open(filename) as filehandle:
+                lines = filehandle.readlines()
+
+            lines = [item.strip() for item in lines]
+
+            tagname = os.path.basename(filename)
+
+            tags[tagname] = lines
 
     return tags
 
@@ -365,10 +386,23 @@ def get_date(text):
     return date
 
 
+def find_tag_definitions(tags, tag):
+    for name, content in tags.items():
+        if name == tag:
+            return content
+
+        if isinstance(content, dict):
+            result = find_tag_definitions(content, tag)
+
+            if result is not None:
+                return result
+
+    return None
+
+
 def check_server_tags(server, cookie, tag_names, tag_searches, acl_group):
     for tag in tag_names:
         logging.debug("Checking server Tag %s", tag["name"])
-        tag_name = tag["name"]
 
         logging.debug("Retrieving data for tag %s", tag["name"])
         data = get_tag(server, cookie, tag["id"])
@@ -383,18 +417,21 @@ def check_server_tags(server, cookie, tag_names, tag_searches, acl_group):
                          tag["name"])
             create_acl(server, cookie, data["id"], acl_group, "GROUP", "WRITE")
 
-        found = False
-
-        for mytag in tag_searches:
-            if mytag == tag_name:
-                found = True
-
-        if not found:
+        if find_tag_definitions(tag_searches, tag["name"]) is None:
             logging.error("Please create tag definition for %s", tag["name"])
 
 
-def check_tag_searches(server, cookie, tag_searches, tag_names, acl_group):
-    for tag in tag_searches:
+def check_tag_searches(server,
+                       cookie,
+                       tag_searches,
+                       tag_names,
+                       acl_group,
+                       parent=None):
+    parent_tag_id = None
+    if parent is not None:
+        parent_tag_id = get_tag_by_name(server, cookie, parent)
+
+    for tag, child in tag_searches.items():
         found = False
 
         for mytag in tag_names:
@@ -402,18 +439,23 @@ def check_tag_searches(server, cookie, tag_searches, tag_names, acl_group):
                 found = True
                 break
 
-        if found:
-            continue
+        if not found:
+            logging.info("Creating tag %s with parent %s", tag,
+                         str(parent_tag_id))
+            result_tag = create_tag(server, cookie, tag, parent_tag_id)
+            if result_tag is None:
+                logging.error("Failed to create tag %s", tag)
+                continue
 
-        logging.info("Creating tag %s", tag)
-        result_tag = create_tag(server, cookie, tag)
-        if result_tag is None:
-            logging.error("Failed to create tag %s", tag)
+            create_acl(server, cookie, result_tag, acl_group, "GROUP", "READ")
+            create_acl(server, cookie, result_tag, acl_group, "GROUP", "WRITE")
 
-        create_acl(server, cookie, result_tag, acl_group, "GROUP", "READ")
-        create_acl(server, cookie, result_tag, acl_group, "GROUP", "WRITE")
+            logging.info("Successfully created tag %s with ID %s", tag,
+                         result_tag)
 
-        logging.info("Successfully created tag %s with ID %s", tag, result_tag)
+        if isinstance(child, dict):
+            check_tag_searches(server, cookie, child, tag_names, acl_group,
+                               tag)
 
 
 def import_file(server, cookie, pathname, acl_group=None):
@@ -521,12 +563,17 @@ def update_document_tags(server, cookie, document_id, tag_names, tag_searches):
     for tag in tag_names:
         tag_name = tag["name"]
 
-        if not tag_name in tag_searches:
+        searches = find_tag_definitions(tag_searches, tag_name)
+
+        if searches is None:
+            continue
+
+        if isinstance(searches, dict):
             continue
 
         found = False
 
-        for search in tag_searches[tag_name]:
+        for search in searches:
             match = search.lower()
             # match = re.sub(r'[^\w\s]', '', match) # Seems to reduce matching performance, hence disabled
 
