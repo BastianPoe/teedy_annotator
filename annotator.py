@@ -749,6 +749,10 @@ def main():
             check_tag_searches(server, cookie, tag_searches, tag_names,
                                acl_group)
 
+            logging.debug("Re-Retrieving tag list from server")
+            tag_names = get_tags(server, cookie)
+            logging.info("%i tags found on the server", len(tag_names))
+
             last_init = time.time()
 
         if (time.time() - last_import) > 600:
