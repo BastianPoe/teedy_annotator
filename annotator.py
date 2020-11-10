@@ -461,6 +461,23 @@ def check_tag_searches(server,
                                tag)
 
 
+def document_reset_tags(server, cookie, document_id):
+    # Retrieve document data
+    data = get_document(server, cookie, document_id)
+
+    # Create update data
+    update_data = create_update_data(data)
+
+    # Remove all tags
+    update_data["tags"] = []
+
+    if not update_document(server, cookie, update_data):
+        logging.error("Updating document %s with %s failed", document_id,
+                      str(update_data))
+
+    logging.debug("All tags for %s removed", document_id)
+
+
 def import_file(server, cookie, pathname, acl_group=None):
     purename = os.path.basename(pathname)
 
@@ -705,6 +722,7 @@ def main():
     last_init = 0
     last_import = 0
     last_tagging = 0
+    last_tag_reset = 0
 
     while True:
         if (time.time() - last_init) > 3600:
@@ -723,12 +741,16 @@ def main():
             username = config.get("DEFAULT", "username")
             password = config.get("DEFAULT", "password")
             acl_group = config.get("DEFAULT", "acl_group")
+            reset_tags = config.getboolean("DEFAULT",
+                                           "reset_tags",
+                                           fallback=False)
 
             logging.info("Config file: %s", args.c)
             logging.info("Server: %s", server)
             logging.info("Username: %s", username)
             logging.info("ACL Group: %s", acl_group)
             logging.info("Import Dir: %s", args.i)
+            logging.info("Reset Tags: %s", str(reset_tags))
 
             logging.debug("Logging in")
             cookie = login(server, username, password)
@@ -760,6 +782,17 @@ def main():
             logging.info("%i tags found on the server", len(tag_names))
 
             last_init = time.time()
+
+        if (time.time() - last_tag_reset) > 86400:
+            # Remove all tags from all documents
+            if reset_tags:
+                logging.warn("Deleting all document tags")
+                documents = get_documents(server, cookie)
+
+                for document in documents:
+                    document_reset_tags(server, cookie, document["id"])
+
+            last_tag_reset = time.time()
 
         if (time.time() - last_import) > 600:
             # Import files
