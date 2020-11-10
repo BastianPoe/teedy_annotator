@@ -137,8 +137,11 @@ def add_file(server, cookie, filename, document_id):
 
     # Set parameters for requests
     parameters = {"id": document_id}
-    resp = requests.put(
-        url, cookies=cookies, files=files, data=parameters, timeout=60)
+    resp = requests.put(url,
+                        cookies=cookies,
+                        files=files,
+                        data=parameters,
+                        timeout=60)
 
     if resp.status_code != 200:
         logging.error("add_file failed, http status code is %i",
@@ -308,7 +311,8 @@ def delete_acl(server, cookie, document_id, target, permission):
 
 def check_acl(acls, target, target_type, permission):
     for acl in acls:
-        if acl["name"] == target and acl["perm"] == permission and acl["type"] == target_type:
+        if acl["name"] == target and acl["perm"] == permission and acl[
+                "type"] == target_type:
             return True
     return False
 
@@ -367,13 +371,12 @@ def get_date(text):
         date_string = matches.group(0)
 
         try:
-            date = dateparser.parse(
-                date_string,
-                settings={
-                    "DATE_ORDER": "DMY",
-                    "PREFER_DAY_OF_MONTH": "first",
-                    "RETURN_AS_TIMEZONE_AWARE": True
-                })
+            date = dateparser.parse(date_string,
+                                    settings={
+                                        "DATE_ORDER": "DMY",
+                                        "PREFER_DAY_OF_MONTH": "first",
+                                        "RETURN_AS_TIMEZONE_AWARE": True
+                                    })
         except (TypeError, ValueError):
             # Skip all matches that do not parse to a proper date
             continue
@@ -675,13 +678,16 @@ def check_config(config, setting):
 def main():
     # Setup command line argument parser
     parser = argparse.ArgumentParser(description="Teedy document annotator")
-    parser.add_argument(
-        "-c", help="Config file to parse", default="annotator.cfg")
-    parser.add_argument(
-        "-i", help="Directory to import files from", default="import")
+    parser.add_argument("-c",
+                        help="Config file to parse",
+                        default="annotator.cfg")
+    parser.add_argument("-i",
+                        help="Directory to import files from",
+                        default="import")
     parser.add_argument("-l", help="Logfile location", default="annotator.log")
-    parser.add_argument(
-        "-t", help="Directory to read tags from", default="tags")
+    parser.add_argument("-t",
+                        help="Directory to read tags from",
+                        default="tags")
 
     # Parse command line arguments
     args = parser.parse_args()
