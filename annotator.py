@@ -11,8 +11,8 @@ import glob
 import argparse
 import configparser
 import requests
-import dateparser
 from fuzzywuzzy import fuzz
+import dateparser
 
 
 def login(server, username, password):
@@ -786,7 +786,7 @@ def main():
         if (time.time() - last_tag_reset) > 86400:
             # Remove all tags from all documents
             if reset_tags:
-                logging.warn("Deleting all document tags")
+                logging.warning("Deleting all document tags")
                 documents = get_documents(server, cookie)
 
                 for document in documents:
