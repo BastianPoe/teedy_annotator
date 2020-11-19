@@ -474,6 +474,19 @@ def check_tag_searches(server,
                                tag)
 
 
+def count_tag_searches(tag_searches):
+    tags = 0
+
+    for tag, child in tag_searches.items():
+        if isinstance(child, dict):
+            tags = tags + count_tag_searches(child)
+            continue
+
+        tags = tags + 1
+
+    return tags
+
+
 def document_reset_tags(server, cookie, document_id):
     # Retrieve document data
     data = get_document(server, cookie, document_id)
@@ -782,7 +795,8 @@ def main():
 
             logging.debug("Reading tag definitions from file")
             tag_searches = read_tags(args.t)
-            logging.info("%i tag definitions found", len(tag_searches))
+            logging.info("%i tag definitions found",
+                         count_tag_searches(tag_searches))
 
             # Check if we have definitions for all teedy tags
             logging.debug(
