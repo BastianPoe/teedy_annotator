@@ -494,7 +494,7 @@ def document_reset_tags(server, cookie, document_id):
 def import_file(server, cookie, pathname, acl_group=None):
     purename = os.path.basename(pathname)
 
-    document_result = add_document(server, cookie, purename)
+    document_result = add_document(server, cookie, purename[:100])
     if document_result is None:
         logging.error("Failed to create document for file %s", purename)
         return None
