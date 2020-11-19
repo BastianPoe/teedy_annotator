@@ -22,6 +22,7 @@ def login(server, username, password):
 
     if resp.status_code != 200:
         logging.error("login failed, http status code is %i", resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -38,6 +39,7 @@ def get_documents(server, cookie, limit=0):
     if resp.status_code != 200:
         logging.error("get_documents failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -53,6 +55,7 @@ def get_document(server, cookie, document_id):
     if resp.status_code != 200:
         logging.error("get_document failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -68,8 +71,7 @@ def update_document(server, cookie, parameter):
     if resp.status_code != 200:
         logging.error("update_document failed, http status code is %i",
                       resp.status_code)
-        logging.error("Code: %i", resp.status_code)
-        logging.error("Erro: %s", resp.text)
+        logging.error("Error Text: %s", resp.text)
         return False
 
     resp.encoding = "utf-8"
@@ -94,6 +96,7 @@ def add_document(server, cookie, title):
     if resp.status_code != 200:
         logging.error("add_document failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -109,6 +112,7 @@ def delete_document(server, cookie, document_id):
     if resp.status_code != 200:
         logging.error("delete_document failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return False
 
     result = json.loads(resp.text)
@@ -146,6 +150,7 @@ def add_file(server, cookie, filename, document_id):
     if resp.status_code != 200:
         logging.error("add_file failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -162,6 +167,7 @@ def delete_file(server, cookie, file_id):
     if resp.status_code != 200:
         logging.error("delete_file failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return False
 
     resp.encoding = "utf-8"
@@ -183,6 +189,7 @@ def get_document_file(server, cookie, document_id):
     if resp.status_code != 200:
         logging.error("get_document_file failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -198,6 +205,7 @@ def get_file_text(server, cookie, file_id):
     if resp.status_code != 200:
         logging.error("get_file_text failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -214,6 +222,7 @@ def get_tags(server, cookie):
     if resp.status_code != 200:
         logging.error("get_tags failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -240,6 +249,7 @@ def get_tag(server, cookie, tag_id):
     if resp.status_code != 200:
         logging.error("get_tag failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -260,6 +270,7 @@ def create_tag(server, cookie, name, parent=None, color="#3a87ad"):
     if resp.status_code != 200:
         logging.error("create_tag failed, http status code is %i (%s)",
                       resp.status_code, resp.text)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -281,6 +292,7 @@ def create_acl(server, cookie, document_id, target, target_type, permission):
     if resp.status_code != 200:
         logging.error("create_acl failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return None
 
     resp.encoding = "utf-8"
@@ -296,6 +308,7 @@ def delete_acl(server, cookie, document_id, target, permission):
     if resp.status_code != 200:
         logging.error("delete_acl failed, http status code is %i",
                       resp.status_code)
+        logging.error("Error Text: %s", resp.text)
         return False
 
     resp.encoding = "utf-8"
