@@ -627,12 +627,14 @@ def update_document_tags(server, cookie, document_id, tag_names, tag_searches):
                 logging.debug("Found exact match of %s for tag %s", match,
                               tag_name)
                 found = True
+                break
 
             score = fuzz.partial_ratio(match, text_lower)
             if score >= 90:
                 logging.debug("Found %s with score %i for tag %s", match,
                               score, tag_name)
                 found = True
+                break
 
         if not found:
             continue
