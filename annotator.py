@@ -374,7 +374,7 @@ def get_date(text):
         +  # NOQA: E501
         r'(\b|(?!=([_-])))([0-9]{4}|[0-9]{2})[\.\/-]([0-9]{1,2})[\.\/-]([0-9]{1,2})(\b|(?=([_-])))|'
         +  # NOQA: E501
-        r'(\b|(?!=([_-])))([0-9]{1,2}[\. ]+[^ ]{3,9} ([0-9]{4}|[0-9]{2}))(\b|(?=([_-])))|'
+        r'(\b|(?!=([_-])))([0-9]{1,2}[\. ]+[^\W\d]{3,9} ([0-9]{4}|[0-9]{2}))(\b|(?=([_-])))|'
         +  # NOQA: E501
         r'(\b|(?!=([_-])))([^\W\d_]{3,9} [0-9]{1,2}, ([0-9]{4}))(\b|(?=([_-])))|'
         + r'(\b|(?!=([_-])))([^\W\d_]{3,9} [0-9]{4})(\b|(?=([_-])))')
@@ -388,7 +388,8 @@ def get_date(text):
                                     settings={
                                         "DATE_ORDER": "DMY",
                                         "PREFER_DAY_OF_MONTH": "first",
-                                        "RETURN_AS_TIMEZONE_AWARE": True
+                                        "RETURN_AS_TIMEZONE_AWARE": True,
+                                        "STRICT_PARSING": True
                                     })
         except (TypeError, ValueError):
             # Skip all matches that do not parse to a proper date
