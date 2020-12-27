@@ -386,11 +386,11 @@ def get_date(text):
         try:
             date = dateparser.parse(date_string,
                                     settings={
-                                        "DATE_ORDER": "DMY",
-                                        "PREFER_DAY_OF_MONTH": "first",
-                                        "RETURN_AS_TIMEZONE_AWARE": True,
-                                        "STRICT_PARSING": True
+                                        'DATE_ORDER': 'DMY',
+                                        'PREFER_DAY_OF_MONTH': 'first',
+                                        'RETURN_AS_TIMEZONE_AWARE': True
                                     })
+
         except (TypeError, ValueError):
             # Skip all matches that do not parse to a proper date
             continue
