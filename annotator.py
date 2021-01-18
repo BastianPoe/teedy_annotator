@@ -34,7 +34,11 @@ def get_documents(server, cookie, limit=0):
     cookies = {"auth_token": cookie}
 
     url = server + "/api/document/list?limit=" + str(limit)
-    resp = requests.get(url, cookies=cookies, timeout=60)
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=180)
+    except requests.exceptions.ReadTimeout:
+        logging.error("get_documents timed out")
+        return None
 
     if resp.status_code != 200:
         logging.error("get_documents failed, http status code is %i",
