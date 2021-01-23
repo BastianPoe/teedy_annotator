@@ -374,14 +374,10 @@ def get_date(text):
     # - MONTH ZZZZ, with ZZZZ being 4 digits
     # - MONTH XX, ZZZZ with XX being 1 or 2 and ZZZZ being 4 digits
     date_regex = re.compile(
-        r'(\b|(?!=([_-])))([0-9]{1,2})[\.\/-]([0-9]{1,2})[\.\/-]([0-9]{4}|[0-9]{2})(\b|(?=([_-])))|'
-        +  # NOQA: E501
-        r'(\b|(?!=([_-])))([0-9]{4}|[0-9]{2})[\.\/-]([0-9]{1,2})[\.\/-]([0-9]{1,2})(\b|(?=([_-])))|'
-        +  # NOQA: E501
-        r'(\b|(?!=([_-])))([0-9]{1,2}[\. ]+[^\W\d]{3,9} ([0-9]{4}|[0-9]{2}))(\b|(?=([_-])))|'
-        +  # NOQA: E501
-        r'(\b|(?!=([_-])))([^\W\d_]{3,9} [0-9]{1,2}, ([0-9]{4}))(\b|(?=([_-])))|'
-        + r'(\b|(?!=([_-])))([^\W\d_]{3,9} [0-9]{4})(\b|(?=([_-])))')
+        r'([0-9]{1,2})[\.]([0-9]{1,2})[\.]([0-9]{4}|[0-9]{2})|'
+        r'([0-9]{1,2})[\/]([0-9]{1,2})[\/]([0-9]{4}|[0-9]{2})|'
+        r'([0-9]{1,2})[-]([0-9]{1,2})[-]([0-9]{4}|[0-9]{2})|' +  # NOQA: E501
+        r'([0-9]{1,2}[\. ]+[^\W\d]{3,9} [0-9]{4})')
 
     # Iterate through all regex matches in text and try to parse the date
     for matches in re.finditer(date_regex, text):
@@ -394,12 +390,36 @@ def get_date(text):
                                         'PREFER_DAY_OF_MONTH': 'first',
                                         'RETURN_AS_TIMEZONE_AWARE': True
                                     })
-
         except (TypeError, ValueError):
             # Skip all matches that do not parse to a proper date
             continue
 
-        if date is not None and next_year > date.year > 1900:
+        if date is not None and next_year > date.year > 1980:
+            break
+
+        date = None
+
+    if date is not None:
+        return date
+
+    date_regex_2 = re.compile(r'([^\W\d_]{3,9} [0-9]{4})')
+
+    # Iterate through all regex matches in text and try to parse the date
+    for matches in re.finditer(date_regex_2, text):
+        date_string = matches.group(0)
+
+        try:
+            date = dateparser.parse(date_string,
+                                    settings={
+                                        'DATE_ORDER': 'DMY',
+                                        'PREFER_DAY_OF_MONTH': 'first',
+                                        'RETURN_AS_TIMEZONE_AWARE': True
+                                    })
+        except (TypeError, ValueError):
+            # Skip all matches that do not parse to a proper date
+            continue
+
+        if date is not None and next_year > date.year > 1980:
             break
 
         date = None
