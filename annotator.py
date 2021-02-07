@@ -710,6 +710,9 @@ def update_document_date(server, cookie, document_id):
         return False
 
     newdate = int(date.timestamp() * 1000)
+
+    logging.debug("Old Date: %i, New Date: %i", data["create_date"], newdate)
+
     if data["create_date"] == newdate:
         return True
 
