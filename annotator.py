@@ -18,7 +18,12 @@ import dateparser
 def login(server, username, password):
     parameters = {"username": username, "password": password}
     url = server + "/api/user/login"
-    resp = requests.post(url, data=parameters, timeout=60)
+
+    try:
+        resp = requests.post(url, data=parameters, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("login failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("login failed, http status code is %i", resp.status_code)
@@ -36,8 +41,8 @@ def get_documents(server, cookie, limit=0):
     url = server + "/api/document/list?limit=" + str(limit)
     try:
         resp = requests.get(url, cookies=cookies, timeout=180)
-    except requests.exceptions.ReadTimeout:
-        logging.error("get_documents timed out")
+    except requests.exceptions.RequestException as errt:
+        logging.error("get_documents failed")
         return None
 
     if resp.status_code != 200:
@@ -54,7 +59,11 @@ def get_documents(server, cookie, limit=0):
 def get_document(server, cookie, document_id):
     cookies = {"auth_token": cookie}
     url = server + "/api/document/" + document_id
-    resp = requests.get(url, cookies=cookies, timeout=60)
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("get_document failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("get_document failed, http status code is %i",
@@ -70,7 +79,12 @@ def get_document(server, cookie, document_id):
 def update_document(server, cookie, parameter):
     cookies = {"auth_token": cookie}
     url = server + "/api/document/" + parameter["id"]
-    resp = requests.post(url, cookies=cookies, data=parameter, timeout=60)
+
+    try:
+        resp = requests.post(url, cookies=cookies, data=parameter, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("update_document failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("update_document failed, http status code is %i",
@@ -95,7 +109,12 @@ def add_document(server, cookie, title):
     cookies = {"auth_token": cookie}
     url = server + "/api/document"
     parameters = {"title": title, "language": "deu"}
-    resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
+
+    try:
+        resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("add_document failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("add_document failed, http status code is %i",
@@ -111,7 +130,12 @@ def add_document(server, cookie, title):
 def delete_document(server, cookie, document_id):
     cookies = {"auth_token": cookie}
     url = server + "/api/document/" + document_id
-    resp = requests.delete(url, cookies=cookies, timeout=60)
+
+    try:
+        resp = requests.delete(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("delete_document failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("delete_document failed, http status code is %i",
@@ -145,11 +169,16 @@ def add_file(server, cookie, filename, document_id):
 
     # Set parameters for requests
     parameters = {"id": document_id}
-    resp = requests.put(url,
-                        cookies=cookies,
-                        files=files,
-                        data=parameters,
-                        timeout=60)
+
+    try:
+        resp = requests.put(url,
+                            cookies=cookies,
+                            files=files,
+                            data=parameters,
+                            timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("add_file failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("add_file failed, http status code is %i",
@@ -166,7 +195,11 @@ def delete_file(server, cookie, file_id):
     cookies = {"auth_token": cookie}
     url = server + "/api/file/" + file_id
 
-    resp = requests.delete(url, cookies=cookies, timeout=60)
+    try:
+        resp = requests.delete(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("delete_file failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("delete_file failed, http status code is %i",
@@ -188,7 +221,12 @@ def delete_file(server, cookie, file_id):
 def get_document_file(server, cookie, document_id):
     cookies = {"auth_token": cookie}
     url = server + "/api/file/list?id=" + document_id
-    resp = requests.get(url, cookies=cookies, timeout=60)
+
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("get_document_file failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("get_document_file failed, http status code is %i",
@@ -204,7 +242,12 @@ def get_document_file(server, cookie, document_id):
 def get_file_text(server, cookie, file_id):
     cookies = {"auth_token": cookie}
     url = server + "/api/file/" + file_id + "/data?size=content"
-    resp = requests.get(url, cookies=cookies, timeout=60)
+
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("get_file_text failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("get_file_text failed, http status code is %i",
@@ -221,7 +264,12 @@ def get_tags(server, cookie):
     cookies = {"auth_token": cookie}
 
     url = server + "/api/tag/list"
-    resp = requests.get(url, cookies=cookies, timeout=60)
+
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("get_tags failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("get_tags failed, http status code is %i",
@@ -248,7 +296,12 @@ def get_tag(server, cookie, tag_id):
     cookies = {"auth_token": cookie}
 
     url = server + "/api/tag/" + tag_id
-    resp = requests.get(url, cookies=cookies, timeout=60)
+
+    try:
+        resp = requests.get(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("get_tag failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("get_tag failed, http status code is %i",
@@ -269,7 +322,12 @@ def create_tag(server, cookie, name, parent=None, color="#3a87ad"):
         parameters["parent"] = parent
 
     url = server + "/api/tag"
-    resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
+
+    try:
+        resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("create_tag failed")
+        return None
 
     if resp.status_code != 200:
         logging.error("create_tag failed, http status code is %i (%s)",
@@ -292,7 +350,12 @@ def create_acl(server, cookie, document_id, target, target_type, permission):
         "type": target_type,
     }
 
-    resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
+    try:
+        resp = requests.put(url, cookies=cookies, data=parameters, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("create_acl failed")
+        return None
+
     if resp.status_code != 200:
         logging.error("create_acl failed, http status code is %i",
                       resp.status_code)
@@ -308,7 +371,12 @@ def delete_acl(server, cookie, document_id, target, permission):
     cookies = {"auth_token": cookie}
     url = server + "/api/acl_/" + document_id + "/" + permission + "/" + target
 
-    resp = requests.delete(url, cookies=cookies, timeout=60)
+    try:
+        resp = requests.delete(url, cookies=cookies, timeout=60)
+    except requests.exceptions.RequestException as errt:
+        logging.error("delete_acl failed")
+        return None
+
     if resp.status_code != 200:
         logging.error("delete_acl failed, http status code is %i",
                       resp.status_code)
@@ -629,7 +697,8 @@ def update_document_tags(server, cookie, document_id, tag_names, tag_searches):
     update = False
 
     text_lower = text.lower()
-    #text_lower = re.sub(r'[^\w\s]', '', text_lower) # Seems to reduce matching performance, hence disabled
+    # text_lower = re.sub(r'[^\w\s]', '', text_lower)
+    # Seems to reduce matching performance, hence disabled
 
     for tag in tag_names:
         tag_name = tag["name"]
@@ -646,7 +715,8 @@ def update_document_tags(server, cookie, document_id, tag_names, tag_searches):
 
         for search in searches:
             match = search.lower()
-            # match = re.sub(r'[^\w\s]', '', match) # Seems to reduce matching performance, hence disabled
+            # match = re.sub(r'[^\w\s]', '', match)
+            # Seems to reduce matching performance, hence disabled
 
             if text_lower.find(match) != -1:
                 logging.debug("Found exact match of %s for tag %s", match,
@@ -874,7 +944,8 @@ def main():
                 logging.info("Successfully uploaded %s as document %s",
                              purename, result)
 
-                # Add the correct tags to the document (if the text is already available)
+                # Add the correct tags to the document
+                # (if the text is already available)
                 update_document_tags(server, cookie, result, tag_names,
                                      tag_searches)
 
